@@ -1,0 +1,20 @@
+#!/bin/bash
+
+while true; do
+    # Prompt the user to type a website URL or "exit" to quit
+    read -p "Please type a website URL to download or type 'exit' to quit: " url
+
+    # Check if the user wants to exit
+    if [ "$url" == "exit" ]; then
+        echo "Exiting..."
+        break
+    fi
+
+    # Prompt the user to type a download location
+    read -p "Please type the download location: " location
+
+    # Use wget to download the webpage
+    wget -P "$location" "$url"
+    
+    echo "Download complete!"
+done
