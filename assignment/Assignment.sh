@@ -17,7 +17,7 @@ ssl_info=$(echo | openssl s_client -servername $(echo $URL | awk -F/ '{print $3}
 echo -e "SSL Certificate Details:\n" > $CERT_DETAILS
 echo "$ssl_info" >> $CERT_DETAILS
 
-# Step 3: Check against trackers, eg. Google, Facebook
+# Check against trackers, eg. Google, Facebook
 echo "Checking for common trackers..."
 trackers=$(echo "$webpage" | grep -Eo 'google-analytics.com|facebook.com/tr|adsystem.com|doubleclick.net')
 
