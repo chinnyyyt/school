@@ -43,7 +43,11 @@ if [ $exit_code -eq 0 ]; then
                 ./bashcalc.sh
                 ;;
             5)
-                ./megafoldermaker.sh
+                read -p "Enter the start number: " start
+                read -p "Enter the end number: " end
+                
+                # Call the actual folder creation script with the provided arguments
+                ./megafoldermaker.sh $start $end
                 ;;
             6)
                 ./filenames.sh
