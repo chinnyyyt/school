@@ -50,7 +50,8 @@ if [ $exit_code -eq 0 ]; then
                 ./megafoldermaker.sh $start $end
                 ;;
             6)
-                ./filenames.sh
+                read -p "Enter the filename to check: " filename
+                ./filenames.sh "$filename"
                 ;;
             7)
                 ./webdownloader.sh
