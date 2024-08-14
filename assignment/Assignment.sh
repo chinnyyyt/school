@@ -1,36 +1,52 @@
 #!/bin/bash
 
-# Define Variables
-URL="https://www.sophos.com/en-us"
-CERT_DETAILS="ssl_details.txt"
-TRACKERS="trackers_found.txt"
+# Define the CVE API endpoint
+API_URL="https://cve.circl.lu/api/last"
 
-# Fetch coontent from website to to analysed
-echo "Fetching data from $URL..."
-webpage=$(curl -s $URL)
+# Fetch the latest CVE data
+echo "Fetching the latest CVE data from $API_URL..."
+response=$(curl -s $API_URL)
 
-# Retrieve SSL Certificate information
-echo "Retrieving SSL certificate details..."
-ssl_info=$(echo | openssl s_client -servername $(echo $URL | awk -F/ '{print $3}') -connect $(echo $URL | awk -F/ '{print $3}'):443 2>/dev/null | openssl x509 -noout -dates -issuer -subject)
-
-# Save SSL information
-echo -e "SSL Certificate Details:\n" > $CERT_DETAILS
-echo "$ssl_info" >> $CERT_DETAILS
-
-# Check against trackers, eg. Google, Facebook
-echo "Checking for common trackers..."
-trackers=$(echo "$webpage" | grep -Eo 'google-analytics.com|facebook.com/tr|adsystem.com|doubleclick.net')
-
-# Save trackers
-if [ -z "$trackers" ]; then
-    echo "No trackers found." > $TRACKERS
-else
-    echo "Trackers found:" > $TRACKERS
-    echo "$trackers" | sort | uniq >> $TRACKERS
+# Check if the response is empty
+if [ -z "$response" ]; then
+    echo "Error: No data received from the API."
+    exit 1
 fi
 
-echo "Processing complete."
+# Process the JSON data using jq
+echo "Processing data..."
+cve_data=$(echo "$response" | jq -r '.[] | "\(.id) | \(.summary) | \(.published)"')
 
-# Output report location
-echo "SSL details saved in $CERT_DETAILS"
-echo "Tracker result saved in $TRACKERS"
+# Check if jq processed the data successfully
+if [ -z "$cve_data" ]; then
+    echo "Error: Failed to process data."
+    exit 1
+fi
+
+# Output the data in a formatted table
+echo -e "CVE ID | Summary | Published Date"
+echo "-----------------------------------------"
+echo "$cve_data" | awk -F '|' '{printf "%-15s | %-50s | %s\n", $1, $2, $3}'
+
+# Calculate statistics
+total_cves=$(echo "$cve_data" | wc -l)
+echo "-----------------------------------------"
+echo "Total CVEs: $total_cves"
+
+# Save the output to a CSV file for further analysis
+output_file="cve_data.csv"
+echo "CVE ID,Summary,Published Date" > $output_file
+echo "$cve_data" | tr '|' ',' >> $output_file
+echo "Data saved to $output_file"
+
+# Optional: Generate a basic report
+echo "Generating report..."
+echo "Latest CVE Report" > cve_report.txt
+echo "Generated on: $(date)" >> cve_report.txt
+echo "Total CVEs: $total_cves" >> cve_report.txt
+echo "-----------------------------------------" >> cve_report.txt
+echo "$cve_data" >> cve_report.txt
+
+echo "Report saved to cve_report.txt"
+
+echo "Script completed successfully."
