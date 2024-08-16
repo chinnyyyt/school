@@ -13,25 +13,45 @@ if [ -z "$response" ]; then
     exit 1
 fi
 
-# Process the JSON data using jq
+# Extract CVE ID, Summary, and Published Date using grep, awk, and sed
 echo "Processing data..."
-cve_data=$(echo "$response" | jq -r '.[] | "\(.id) | \(.summary) | \(.published)"')
+cve_data=$(echo "$response" | grep -E '"id":|"summary":|"Published":' | sed 's/[",]//g' | awk -F':' '
+    /id/ {id=$2}
+    /summary/ {summary=$2}
+    /Published/ {
+        published=$2;
+        print id "|" summary "|" published
+    }'
+)
 
-# Check if jq processed the data successfully
+# Check if data was processed
 if [ -z "$cve_data" ]; then
     echo "Error: Failed to process data."
     exit 1
 fi
 
-# Output the data in a formatted table
-echo -e "CVE ID | Summary | Published Date"
-echo "-----------------------------------------"
-echo "$cve_data" | awk -F '|' '{printf "%-15s | %-50s | %s\n", $1, $2, $3}'
+# Create the table
+table_width=120
+
+# Output the data in a formatted table with aligned columns
+printf "%-${table_width}s\n" | tr ' ' '-'
+printf "| %-15s | %-80s | %-15s |\n" "CVE ID" "Summary" "Published Date"
+printf "%-${table_width}s\n" | tr ' ' '-'
+
+# Loop through each CVE and print in table format
+echo "$cve_data" | while IFS="|" read -r id summary published; do
+    printf "| %-15s | %-80s | %-15s |\n" "$id" "$(echo "$summary" | cut -c1-80)" "$published"
+done
+
+# Add the closing line for the table
+printf "%-${table_width}s\n" | tr ' ' '-'
 
 # Calculate statistics
 total_cves=$(echo "$cve_data" | wc -l)
-echo "-----------------------------------------"
-echo "Total CVEs: $total_cves"
+
+# Display the total in the table format
+printf "| %-15s | %-80s | %-15s |\n" "Total CVEs:" "$total_cves" ""
+printf "%-${table_width}s\n" | tr ' ' '-'
 
 # Save the output to a CSV file for further analysis
 output_file="cve_data.csv"
