@@ -18,7 +18,7 @@ do
       
     #Create a new folder for that number 
       
-    echo "Creating directory number $i" 
+    echo "Creating folder week $i" 
       
     mkdir "week $i" 
       
