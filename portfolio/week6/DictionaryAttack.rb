@@ -4,37 +4,34 @@ require 'digest'
 # Define the target password hash
 passwordHash = "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
 
-# Read the wordlist into an array
-wordlist = IO.readlines("wordlist.txt").map(&:chomp)
+# Define the characters to use in the brute force attack
+chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a # Add more if needed
 
-# Method to generate permutations of a given length from the wordlist
-def generate_permutations(length, wordlist)
-  wordlist.repeated_permutation(length).each do |combination|
-    yield combination.join
-  end
-end
+# Method to generate combinations recursively
+def brute_force(chars, passwordHash, prefix = "", length)
+  if length == 0
+    # Hash the generated password
+    passwordHashAttempt = Digest::SHA256.hexdigest(prefix)
+    puts("Trying password #{prefix}: #{passwordHashAttempt}")
 
-# Method to attempt brute force attack using permutations
-def brute_force_attack(passwordHash, wordlist, max_length)
-  (1..max_length).each do |length|
-    generate_permutations(length, wordlist) do |password|
-      # Hash the password
-      passwordHashAttempt = Digest::SHA256.hexdigest(password)
-      puts("Trying password #{password}: #{passwordHashAttempt}")
-
-      # Check if the hash matches the target hash
-      if passwordHashAttempt == passwordHash
-        puts("Password has been cracked! It was #{password}")
-        return
-      end
+    # Check if the hash matches the target hash
+    if passwordHashAttempt == passwordHash
+      puts("Password has been cracked! It was #{prefix}")
+      exit
+    end
+  else
+    chars.each do |char|
+      brute_force(chars, passwordHash, prefix + char, length - 1)
     end
   end
-
-  puts("Password not found within the given length.")
 end
 
-# Set the maximum length of permutations to try
+# Set the maximum password length to try
 max_length = 2 # Adjust this length as needed
 
-# Start the brute force attack
-brute_force_attack(passwordHash, wordlist, max_length)
+# Start brute force attack
+(1..max_length).each do |length|
+  brute_force(chars, passwordHash, "", length)
+end
+
+puts("Password not found within the given length.")
