@@ -1,18 +1,21 @@
 #!/bin/bash
 
-# Check if the input file is provided
-if [ -z "$1" ]; then
-    echo "Usage: $0 <filename>"
+# Check if the input file "filenames.txt" exists.
+if [ ! -f "filenames.txt" ]; then
+    echo "The file 'filenames.txt' does not exist."
     exit 1
 fi
 
-# Iterate through each line of the input file
+# Read each line from the file "filenames.txt".
 while IFS= read -r line; do
+    # Check if the line is a valid filename (file exists).
     if [ -f "$line" ]; then
-        echo "That file exists"
+        echo "That file exists."
+    # Check if the line is a directory name (directory exists).
     elif [ -d "$line" ]; then
-        echo "That’s a directory"
+        echo "That’s a directory."
+    # If neither, print an unknown type message.
     else
         echo "I don’t know what that is!"
     fi
-done < "$1"
+done < "filenames.txt"
