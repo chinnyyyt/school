@@ -70,3 +70,4 @@ echo "$cve_data" >> cve_report.txt
 echo "Report saved to cve_report.txt"
 
 echo "Script completed successfully."
+# I acknowledge the use of chatgpt3.5 to brainstorm the useful content
